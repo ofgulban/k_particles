@@ -3,6 +3,7 @@ import cv2
 
 OUT1 = "/home/faruk/data2/test-k_particles/test1.png"
 OUT2 = "/home/faruk/data2/test-k_particles/test2.png"
+OUT3 = "/home/faruk/data2/test-k_particles/test3.png"
 
 # Dimensions of the 2D wave
 width = 512
@@ -33,6 +34,13 @@ cv2.imwrite(OUT1, wave_scaled.astype(np.uint8))
 
 # Perform the FFT to obtain the frequency domain representation
 fft_result = np.fft.fftshift(np.fft.fft2(wave))
+
+# -----------------------------------------------------------------------------
+print(np.percentile(wave, [0, 100]))
+ifft_result = np.fft.fft2(np.fft.ifftshift(fft_result)).real
+print(np.percentile(ifft_result, [0, 100]))
+cv2.imwrite(OUT3, ifft_result)
+# -----------------------------------------------------------------------------
 
 # Calculate the magnitude spectrum
 magnitude_spectrum = np.abs(fft_result)
