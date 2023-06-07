@@ -1,6 +1,9 @@
 import numpy as np
 import cv2
 
+OUT1 = "/home/faruk/data2/test-k_particles/test1.png"
+OUT2 = "/home/faruk/data2/test-k_particles/test2.png"
+
 # Dimensions of the 2D wave
 width = 512
 height = 512
@@ -26,7 +29,7 @@ wave_scaled = ((wave + 1) * 127.5)
 print(np.percentile(wave_scaled, [0, 100]))
 
 # Wrap
-cv2.imwrite('wave.png', wave_scaled.astype(np.uint8))
+cv2.imwrite(OUT1, wave_scaled.astype(np.uint8))
 
 # Perform the FFT to obtain the frequency domain representation
 fft_result = np.fft.fftshift(np.fft.fft2(wave))
@@ -38,7 +41,7 @@ magnitude_spectrum = np.abs(fft_result)
 scaled_spectrum = ((magnitude_spectrum / magnitude_spectrum.max()) * 255).astype(np.uint8)
 
 # Save the magnitude spectrum as a PNG image using OpenCV
-cv2.imwrite('fft_image.png', scaled_spectrum)
+cv2.imwrite(OUT2, scaled_spectrum)
 
 # Print a message indicating the images have been saved
 print("Wave image saved as wave.png")
