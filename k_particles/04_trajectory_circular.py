@@ -92,6 +92,9 @@ def gaussian_interpolation(img, x, y):
     # Hermitian symmetry
     img += img[::-1, ::-1]
 
+    # img += img[::-1, :]
+    # img += img[:, ::-1]
+
     return img
 
 
