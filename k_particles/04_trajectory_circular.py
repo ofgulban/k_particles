@@ -4,11 +4,11 @@ import cv2
 from scipy.ndimage import zoom
 
 OUTDIR = "/home/faruk/Documents/temp-k_particles/04_trajectory_circular"
-DIMS = [512, 512]
+DIMS = [128, 128]
 
 CENTER = (DIMS[0]-1)/2, (DIMS[1]-1)/2  # Center coordinates of the circle
-RADIUS = 32  # Radius of the circle
-NUM_POINTS = 360  # Number of points to generate
+RADIUS = 8  # Radius of the circle
+NUM_POINTS = 1200  # Number of points to generate
 
 # =============================================================================
 
@@ -50,8 +50,8 @@ def bilinear_interpolation(img, x, y):
 
 def gaussian_interpolation(img, x, y):
     # Find the four neighboring grid points
-    i = int(x)
-    j = int(y)
+    i = int(np.round(x))
+    j = int(np.round(y))
 
     p00 = abs(x - (i-1)), abs(y - (j-1))
     p01 = abs(x - (i-1)), abs(y - j)
@@ -122,7 +122,7 @@ for i in range(NUM_POINTS):
 
     # Save
     img = np.hstack((img1, img2))
-    img = zoom(img, 2, order=0)
+    img = zoom(img, 8, order=0)
     outname = os.path.join(OUTDIR, "test-{}.png".format(str(i).zfill(4)))
     cv2.imwrite(outname, img.astype(np.uint8))
 
