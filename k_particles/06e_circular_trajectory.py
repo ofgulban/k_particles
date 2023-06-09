@@ -3,49 +3,26 @@ import numpy as np
 import cv2
 from scipy.ndimage import zoom
 
-OUTDIR = "/Users/faruk/Documents/temp-k_particles/04_trajectory_circular"
+OUTDIR = "/Users/faruk/Documents/temp-k_particles/06e_circular_trajectory"
 DIMS = [128, 128]
 
 CENTER = (DIMS[0]-1)/2, (DIMS[1]-1)/2  # Center coordinates of the circle
 RADIUS = 8  # Radius of the circle
-NUM_POINTS = 120  # Number of points to generate
+NUM_POINTS = 1200  # Number of points to generate
+
+# -----------------------------------------------------------------------------
+# Output directory
+if not os.path.exists(OUTDIR):
+    os.makedirs(OUTDIR)
+print("  Output directory: {}\n".format(OUTDIR))
 
 # =============================================================================
-
 
 def generate_points_on_circle(center, radius, num_points):
     theta = np.linspace(0, 2*np.pi, num_points, endpoint=False)
     x = center[0] + radius * np.cos(theta)
     y = center[1] + radius * np.sin(theta)
     return x, y
-
-
-def bilinear_interpolation(img, x, y):
-    # Find the four neighboring grid points
-    xi = int(x)
-    xj = xi + 1
-    yi = int(y)
-    yj = yi + 1
-
-    # Calculate the weights
-    w1 = (1 - (x - xi)) * (1 - (y - yi))
-    w2 = (1 - (xj - x)) * (1 - (y - yi))
-    w3 = (1 - (x - xi)) * (1 - (yj - y))
-    w4 = (1 - (xj - x)) * (1 - (yj - y))
-
-    # Perform bilinear interpolation
-    img[int(xi), int(yi)] = w1
-    img[int(xj), int(yi)] = w2
-    img[int(xi), int(yj)] = w3
-    img[int(xj), int(yj)] = w4
-
-    # Hermitian symmetry
-    img[DIMS[0]-xi, DIMS[1]-yi] = w1
-    img[DIMS[0]-xj, DIMS[1]-yi] = w2
-    img[DIMS[0]-xi, DIMS[1]-yj] = w3
-    img[DIMS[0]-xj, DIMS[1]-yj] = w4
-
-    return img
 
 
 def gaussian_interpolation(img, x, y):
@@ -98,16 +75,27 @@ def gaussian_interpolation(img, x, y):
     return img
 
 
-coords = generate_points_on_circle(CENTER, RADIUS, NUM_POINTS)
-for i in range(NUM_POINTS):
+def coordinates_to_lattice(coords, img_dims):
     x, y = coords[0][i], coords[1][i]
 
     # Lattice
-    kspace = np.zeros(DIMS, dtype=complex)
+    kspace = np.zeros(img_dims, dtype=complex)
 
     # Insert particle
-    # kspace.real = bilinear_interpolation(kspace.real, x, y)
     kspace.real = gaussian_interpolation(kspace.real, x, y)
+    return kspace
+
+
+# -----------------------------------------------------------------------------
+kspace = np.zeros(DIMS, dtype=complex)
+for i in range(NUM_POINTS):
+    kspace.real *= 1.0
+    for j in range(2):
+        coords = generate_points_on_circle(CENTER, RADIUS+j*8, NUM_POINTS)
+        kspace += coordinates_to_lattice(coords, DIMS)
+
+    # Clip
+    kspace.real[kspace.real > 1] = 1
 
     # Convert to image format
     img1 = np.abs(kspace) * 255

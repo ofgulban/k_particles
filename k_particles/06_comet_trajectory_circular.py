@@ -3,18 +3,30 @@ import numpy as np
 import cv2
 from scipy.ndimage import zoom
 
-OUTDIR = "/Users/faruk/Documents/temp-k_particles/04_trajectory_circular"
+OUTDIR = "/Users/faruk/Documents/temp-k_particles/06_multi_trajectory_circular"
 DIMS = [128, 128]
 
 CENTER = (DIMS[0]-1)/2, (DIMS[1]-1)/2  # Center coordinates of the circle
 RADIUS = 8  # Radius of the circle
-NUM_POINTS = 120  # Number of points to generate
+NUM_POINTS = 1200  # Number of points to generate
+
+# -----------------------------------------------------------------------------
+# Output directory
+if not os.path.exists(OUTDIR):
+    os.makedirs(OUTDIR)
+print("  Output directory: {}\n".format(OUTDIR))
 
 # =============================================================================
 
-
 def generate_points_on_circle(center, radius, num_points):
     theta = np.linspace(0, 2*np.pi, num_points, endpoint=False)
+    x = center[0] + radius * np.cos(theta)
+    y = center[1] + radius * np.sin(theta)
+    return x, y
+
+
+def generate_points_on_circle2(center, radius, num_points):
+    theta = np.linspace(2*np.pi, 0, num_points, endpoint=False)
     x = center[0] + radius * np.cos(theta)
     y = center[1] + radius * np.sin(theta)
     return x, y
@@ -98,16 +110,27 @@ def gaussian_interpolation(img, x, y):
     return img
 
 
-coords = generate_points_on_circle(CENTER, RADIUS, NUM_POINTS)
-for i in range(NUM_POINTS):
+def coordinates_to_lattice(coords, img_dims):
     x, y = coords[0][i], coords[1][i]
 
     # Lattice
-    kspace = np.zeros(DIMS, dtype=complex)
+    kspace = np.zeros(img_dims, dtype=complex)
 
     # Insert particle
-    # kspace.real = bilinear_interpolation(kspace.real, x, y)
     kspace.real = gaussian_interpolation(kspace.real, x, y)
+    return kspace
+
+kspace = np.zeros(DIMS, dtype=complex)
+for i in range(NUM_POINTS):
+    for j in range(3):
+        if j % 2 == 0:
+            coords = generate_points_on_circle(CENTER, RADIUS + j*16, NUM_POINTS)
+        else: 
+            coords = generate_points_on_circle2(CENTER, RADIUS + j*16, NUM_POINTS)
+        kspace += coordinates_to_lattice(coords, DIMS)
+
+    # (Optional) Clip
+    kspace.real[kspace.real > 1] = 1
 
     # Convert to image format
     img1 = np.abs(kspace) * 255
@@ -125,5 +148,8 @@ for i in range(NUM_POINTS):
     img = zoom(img, 8, order=0)
     outname = os.path.join(OUTDIR, "test-{}.png".format(str(i).zfill(4)))
     cv2.imwrite(outname, img.astype(np.uint8))
+
+    # (Optional) Degrade
+    kspace.real *= 0.9
 
 print("Finished.")
