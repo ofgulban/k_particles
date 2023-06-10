@@ -8,8 +8,9 @@ SOURCE = [
     # "/Users/faruk/Documents/temp-k_particles/06d_circular_trajectory",
     # "/Users/faruk/Documents/temp-k_particles/06e_circular_trajectory",
     # "/Users/faruk/Documents/temp-k_particles/06f_circular_trajectory",
-    "/Users/faruk/Documents/temp-k_particles/06g_circular_trajectory",
+    # "/Users/faruk/Documents/temp-k_particles/06g_circular_trajectory",
     # "/Users/faruk/Documents/temp-k_particles/06h_circular_trajectory",
+    "/Users/faruk/Documents/temp-k_particles/06j_circular_trajectory",
     ]   
 
 OUTNAMES = [
@@ -19,12 +20,15 @@ OUTNAMES = [
     # "06d.mp4", 
     # "06e.mp4", 
     # "06f.mp4", 
-    "06g.mp4",
+    # "06g.mp4",
     # "06h.mp4",
+    "06j.mp4",
     ]
 
 
 OUTDIR = "/Users/faruk/Documents/temp-k_particles/movies"
+
+FRAMERATE = 30
 
 # -----------------------------------------------------------------------------
 # Output directory
@@ -38,7 +42,7 @@ for i in range(len(SOURCE)):
     output = os.path.join(OUTDIR, OUTNAMES[i])
 
     command = "ffmpeg "
-    command += "-y -framerate 60 "
+    command += "-y -framerate {} ".format(FRAMERATE)
     command += "-i {}/test-%04d.png ".format(SOURCE[i])
     command += "-c:v libx264 -pix_fmt yuv420p "
     command += "{}".format(output)
