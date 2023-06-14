@@ -25,7 +25,7 @@ def generate_points_on_circle(center, radius, start, end, num_points):
     return coords
 
 
-def gaussian_interpolation(img, x, y, alpha=1.0):
+def gaussian_interpolation(img, x, y, alpha=1.0, hermitian=True):
     # Find the four neighboring grid points
     i = int(np.round(x))
     j = int(np.round(y))
@@ -68,7 +68,8 @@ def gaussian_interpolation(img, x, y, alpha=1.0):
     img[i+1, j+1] = w22 * alpha
 
     # Hermitian symmetry
-    img += img[::-1, ::-1]
+    if hermitian:
+        img += img[::-1, ::-1]
 
     # img += img[::-1, :]
     # img += img[:, ::-1]
@@ -76,11 +77,19 @@ def gaussian_interpolation(img, x, y, alpha=1.0):
     return img
 
 
-def coordinates_to_lattice(coord_x, coord_y, lattice, alpha):
+def coordinates_to_lattice(coord_x, coord_y, lattice, alpha, hermitian=True):
     # Insert points onto a clean lattice
     temp = np.zeros(lattice.shape)
-    lattice += gaussian_interpolation(temp, coord_x, coord_y, alpha)
+    lattice += gaussian_interpolation(temp, coord_x, coord_y, alpha, hermitian)
 
     # Clip
     lattice[lattice > 1] = 1
     return lattice
+
+
+def normalize_to_uint8(array, perc_min=0, perc_max=100):
+    val_min, val_max = np.percentile(array, [perc_min, perc_max])
+    array[array > val_max] = val_max
+    array[array < val_min] = val_min    
+    array = (array - val_min) / (val_max - val_min) * 255
+    return array.astype(np.uint8)

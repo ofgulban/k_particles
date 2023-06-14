@@ -7,12 +7,12 @@ from core import *
 
 FILE1 = "/Users/faruk/Documents/temp-k_particles/nii_prep/slice-235.nii.gz"
 
-OUTDIR = "/Users/faruk/Documents/temp-k_particles/nii_prep"
+OUTDIR = "/Users/faruk/Documents/temp-k_particles/nii_frames"
 OUTPATH = os.path.join(OUTDIR, "step-01.png")
 
 # =============================================================================
 
-def normalize_to_uint8(array, perc_min=5, perc_max=95):
+def normalize_to_uint8(array, perc_min=0, perc_max=100):
     val_min, val_max = np.percentile(array, [perc_min, perc_max])
     array[array > val_max] = val_max
     array[array < val_min] = val_min    
@@ -37,16 +37,49 @@ img1 = normalize_to_uint8(data)
 
 
 # Go to k space
-kspace = np.zeros(data.shape, dtype=complex)
+kspace_base = np.zeros(data.shape, dtype=complex)
 temp = sp.fft.fft2(data)
 temp = sp.fft.fftshift(temp)
-kspace[:, :] = temp
-img2 = normalize_to_uint8(np.abs(kspace))
-img3 = normalize_to_uint8(np.abs(np.angle(kspace)))
+kspace_base[:, :] = temp
+img2 = normalize_to_uint8(np.abs(kspace_base))
+img3 = normalize_to_uint8(np.abs(np.angle(kspace_base)))
 
-print(np.percentile(img1, (0, 100)))
-print(np.percentile(img2, (0, 100)))
-print(np.percentile(img3, (0, 100)))
-save_3images_as_png(img1, img2, img3, OUTDIR, 1, zoom_factor=2)
+# -----------------------------------------------------------------------------
+# K particle part
+# -----------------------------------------------------------------------------
+DIMS = data.shape
+NR_PARTICLES = 1
+KAPPA = 0
+NUM_POINTS = 300
+CENTER = (DIMS[0]-1)/2, (DIMS[1]-1)/2
+RADIUS = 20
+RHO = 10
+ALPHA = 1.0
+
+twopi = 2*np.pi
+kspace = np.zeros(DIMS, dtype=complex)
+for i in range(NUM_POINTS):
+    kspace.real *= KAPPA
+    kspace.imag *= KAPPA
+    for j in range(NR_PARTICLES):
+        coords = generate_points_on_circle(CENTER, RADIUS+j*RHO,
+                                           twopi/4*j, twopi/4*j+twopi,
+                                           NUM_POINTS)
+        kspace.real = coordinates_to_lattice(coords[i, 0], coords[i, 1], 
+                                             kspace.real, ALPHA)
+
+    kspace *= kspace_base
+
+    # Convert to image format
+    img1 = normalize_to_uint8(np.abs(kspace))
+
+    # Reconstruct image
+    ispace = np.fft.ifft2(kspace)
+
+    # Convert to image format
+    img2 = normalize_to_uint8(np.abs(ispace))
+    # img2 = np.fft.ifftshift(img2)  # TODO: Figure out why I need this
+
+    save_frame_as_png(img1, img2, OUTDIR, i, zoom_factor=1)
 
 print("Finished.")
