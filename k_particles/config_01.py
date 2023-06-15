@@ -2,7 +2,7 @@
 OUTDIR = "/Users/faruk/Documents/temp-k_particles/06a_circular_trajectory"
 
 # K-space dimensions
-DIMS = [128, 128]
+DIMS = [101, 101]
 
 # Circle parameters
 CENTER = (DIMS[0]-1)/2, (DIMS[1]-1)/2
@@ -19,3 +19,6 @@ NR_PARTICLES = 1
 
 # Amplitude of the particles, maximum is 1
 ALPHA = 1.0
+
+# Distance between particles radii
+RHO = 4

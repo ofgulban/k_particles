@@ -2,6 +2,7 @@ import os
 import numpy as np
 from scipy.ndimage import zoom
 import cv2
+import subprocess
 
 
 def create_output_directory(outdir):
@@ -10,7 +11,15 @@ def create_output_directory(outdir):
     print("\n  Output directory:\n    {}\n".format(outdir))
 
 
-def save_frame_as_png(img1, img2, outdir, i, zoom_factor=8):
+def save_frame_as_png_1(img1, outdir, tag="frame", i=None, zoom_factor=8):
+    img1 = zoom(img1, zoom_factor, order=0)
+    if i is None:
+        outname = os.path.join(outdir, "{}.png".format(tag))
+    else:
+        outname = os.path.join(outdir, "{}-{}.png".format(tag, str(i).zfill(4)))
+    cv2.imwrite(outname, img1)
+
+def save_frame_as_png_2(img1, img2, outdir, i, zoom_factor=8):
     img_out = np.hstack((img1, img2))
     img_out = zoom(img_out, zoom_factor, order=0)
     outname = os.path.join(outdir, "frame-{}.png".format(str(i).zfill(4)))
@@ -88,8 +97,31 @@ def coordinates_to_lattice(coord_x, coord_y, lattice, alpha, hermitian=True):
 
 
 def normalize_to_uint8(array, perc_min=0, perc_max=100):
-    val_min, val_max = np.percentile(array, [perc_min, perc_max])
+    temp = array[array != 0]
+    val_min, val_max = np.percentile(temp, [perc_min, perc_max])
     array[array > val_max] = val_max
     array[array < val_min] = val_min    
     array = (array - val_min) / (val_max - val_min) * 255
     return array.astype(np.uint8)
+
+
+def Lp_norm(x1, x2, p):
+    return np.power(np.abs(np.power(x1, p)) + np.abs(np.power(x2, p)), 1./p)
+
+
+def create_2D_array_coordinates(size_x, size_y, center_x, center_y):
+    x = np.arange(center_x - size_x // 2, center_x + size_x // 2)
+    y = np.arange(center_y - size_y // 2, center_y + size_y // 2)
+    return np.transpose(np.asarray(np.meshgrid(x, y)), (1, 2, 0))
+
+
+def make_movie(outdir, tag="00_movie", framerate=30):
+    command = "ffmpeg "
+    command += "-y -framerate {} ".format(framerate)
+    command += "-i {}/frame-%04d.png ".format(outdir)
+    command += "-c:v libx264 -pix_fmt yuv420p "
+    command += "{}/{}.mp4".format(outdir, tag)
+
+    # Execute command
+    print(command)
+    subprocess.run(command, shell=True, check=True)

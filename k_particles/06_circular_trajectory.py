@@ -1,8 +1,8 @@
 import numpy as np
 from core import *
-# from config_01 import *
+from config_01 import *
 # from config_02 import *
-from config_03 import *
+# from config_03 import *
 
 # -----------------------------------------------------------------------------
 print("==========")
