@@ -1,9 +1,9 @@
 import numpy as np
 import cv2
 
-OUT1 = "/home/faruk/data2/test-k_particles/test1.png"
-OUT2 = "/home/faruk/data2/test-k_particles/test2.png"
-OUT3 = "/home/faruk/data2/test-k_particles/test3.png"
+OUT1 = "/Users/faruk/Documents/temp-k_particles/01_temp_Kparticles/test1.png"
+OUT2 = "/Users/faruk/Documents/temp-k_particles/01_temp_Kparticles/test2.png"
+OUT3 = "/Users/faruk/Documents/temp-k_particles/01_temp_Kparticles/test3.png"
 
 # Dimensions of the 2D wave
 width = 512
