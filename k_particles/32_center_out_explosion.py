@@ -25,9 +25,9 @@ kspace = np.fft.fftshift(np.fft.fft2(ispace))
 DIMS = ispace.shape
 print(DIMS)
 
-coords = generate_random_particles(DIMS, NR_PARTICLES, multiplier=50)
-velo = generate_random_velocities(DIMS, NR_PARTICLES, normalize=True, 
-                                  multiplier=3)
+coords = generate_random_particles(DIMS, NR_PARTICLES, multiplier=10)
+velo = generate_random_velocities(DIMS, NR_PARTICLES, normalize=False, 
+                                  multiplier=10)
 
 create_output_directory(OUTDIR)
 mask = np.zeros(DIMS, dtype=complex)
@@ -65,7 +65,7 @@ for i in range(NR_FRAMES):
 
     save_frame_as_png_2(img1, img2, OUTDIR, i)
 
-# # =============================================================================
+# =============================================================================
 command = "ffmpeg "
 command += "-y -framerate {} ".format(FRAMERATE)
 command += "-i {}/frame-%04d.png ".format(OUTDIR)

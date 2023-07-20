@@ -3,6 +3,7 @@ import numpy as np
 from scipy.ndimage import zoom
 import cv2
 import subprocess
+import random
 
 
 def create_output_directory(outdir):
@@ -125,3 +126,37 @@ def make_movie(outdir, tag="00_movie", framerate=30):
     # Execute command
     print(command)
     subprocess.run(command, shell=True, check=True)
+
+# =============================================================================
+# Hackathon additions
+# =============================================================================
+
+def generate_random_particles(dims, nr_particles, multiplier=1):
+    coords = np.zeros((nr_particles, 2))
+    for i in range(nr_particles):
+        coords[i, 0] = dims[0]//2 + random.uniform(-1, 1) * multiplier
+        coords[i, 1] = dims[1]//2 + random.uniform(-1, 1) * multiplier
+    return coords
+
+
+def generate_random_velocities(dims, nr_particles, normalize=True, multiplier=1):
+    coords = np.zeros((nr_particles, 2))
+    for i in range(nr_particles):
+        coords[i, 0] = random.uniform(-1, 1) * multiplier
+        coords[i, 1] = random.uniform(-1, 1) * multiplier
+        
+        # Normalize to unit vector
+        if normalize:
+            norm = np.linalg.norm(coords[i, :])
+            coords[i, :] /= norm
+
+    return coords
+
+def update_particle_coordinates(coords, velo, dims):
+    coords += velo
+
+    # x and y as lon as they are the same    
+    coords[coords < 0] += dims[0]-2
+    coords[coords >= dims[0]-2] -= dims[0]-2
+
+    return coords
