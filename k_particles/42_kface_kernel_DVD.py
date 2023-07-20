@@ -12,7 +12,8 @@ FILE2 = "/Users/faruk/Documents/temp-k_particles/pngs/kernel-kevin.png"
 
 OUTDIR = "/Users/faruk/Documents/temp-k_particles/42_kface_kernel_DVD"
 
-NR_FRAMES = 30
+NR_FRAMES = 300
+FRAMERATE = 30
 
 # =============================================================================
 # Load brain data
@@ -29,16 +30,78 @@ ispace2 = sp.ndimage.zoom(ispace2, 0.5)
 ispace2 = ispace2 / np.max(ispace2)
 
 # Move kernel in kspace
+roll1 = random.choice([-1, 1]) * random.choice([1, 2])
+roll2 = random.choice([-1, 1]) * random.choice([1, 2])
 for i in range(NR_FRAMES):
-    ispace2 = np.roll(ispace2, 10, axis=0)
-    ispace2 = np.roll(ispace2, 10, axis=1)
+    ispace2 = np.roll(ispace2, roll1, axis=0)
+    ispace2 = np.roll(ispace2, roll2, axis=1)
 
     kspace_temp = np.copy(kspace1)
-    kspace_temp *= ispace2
+
+    # Real imaginary to magnitude and phase
+    kspace_mag = np.abs(kspace_temp)
+    kspace_pha = np.angle(kspace_temp)
+
+    # Mask magnitude
+    kspace_mag *= ispace2
+
+    # Calculate real and imaginary parts
+    kspace_real = kspace_mag * np.cos(kspace_pha)
+    kspace_imag = kspace_mag * np.sin(kspace_pha)
+
+    # Create complex numbers using real and imaginary parts
+    kspace_temp = kspace_real + 1j * kspace_imag
     recon = np.fft.ifft2(np.fft.ifftshift(kspace_temp))
 
     img1 = normalize_to_uint8(np.log10(np.abs(kspace_temp) + 1), perc_min=0.1, perc_max=99.9)
     img2 = normalize_to_uint8(np.abs(recon), perc_min=0.1, perc_max=99.9)
     save_frame_as_png_2(img1, img2, OUTDIR, i=i)
+
+    # Edge conditions / bounce
+    collapse1 = np.sum(ispace2, axis=0)
+    collapse2 = np.sum(ispace2, axis=1)
+
+    # if collapse1[0] > 0:
+    #     roll2 *= -1
+    # elif collapse1[-1] > 0:
+    #     roll2 *= -1
+    # if collapse2[0] > 0:
+    #     roll1 *= -1
+    # elif collapse2[-1] > 0:
+    #     roll1 *= -1
+
+    if collapse1[0] > 0:
+        if roll2 > 1:
+            roll2 *= -1
+        else:
+            roll2 *= -random.choice([1, 2])
+    elif collapse1[-1] > 0:
+        if roll2 > 1:
+            roll2 *= -1
+        else:
+            roll2 *= -random.choice([1, 2])
+    if collapse2[0] > 0:
+        if roll2 > 1:
+            roll1 *= -1
+        else:
+            roll1 *= -random.choice([1, 2])
+    elif collapse2[-1] > 0:
+        if roll2 > 1:
+            roll1 *= -1
+        else:
+            roll1 *= -random.choice([1, 2])
+
+# =============================================================================
+command = "ffmpeg -y "
+command += "-framerate {} ".format(int(FRAMERATE))
+command += "-i {}/frame-%04d.png ".format(OUTDIR)
+command += "-c:v libx264 -r 30 -pix_fmt yuv420p "
+command += "{}/00_movie.mp4".format(OUTDIR)
+
+# Execute command
+print("==========!!!!!!!!!!!!==========")
+print(command)
+print("==========!!!!!!!!!!!!==========")
+subprocess.run(command, shell=True, check=True)
 
 print("Finished.")
