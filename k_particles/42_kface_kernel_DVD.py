@@ -1,4 +1,4 @@
-"""Implement Conway's game of life."""
+"""Bounce is not working properly."""
 
 import subprocess
 import numpy as np
